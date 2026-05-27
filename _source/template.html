@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>瑞幸咖啡北美 · 人事系统数据分析仪表盘</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue: #0057B8;
+    --blue-deep: #003F87;
+    --blue-soft: #E8F0FA;
+    --blue-softer: #F4F8FC;
+    --white: #FFFFFF;
+    --ink: #111827;
+    --ink-soft: #374151;
+    --grey: #6B7280;
+    --grey-light: #9CA3AF;
+    --border: #E5E7EB;
+    --border-soft: #F3F4F6;
+    --success: #047857;
+    --success-bg: #ECFDF5;
+    --warning: #B45309;
+    --warning-bg: #FFFBEB;
+    --danger: #B91C1C;
+    --danger-bg: #FEF2F2;
+    --pending: #4F46E5;
+    --pending-bg: #EEF2FF;
+
+    --sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+    --mono: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--white);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === Password gate === */
+  .gate {
+    position: fixed; inset: 0; background: var(--blue-deep);
+    display: flex; align-items: center; justify-content: center; z-index: 1000;
+  }
+  .gate-card {
+    background: var(--white); padding: 40px 48px; max-width: 420px; width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .gate-logo {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 4px;
+  }
+  .gate-logo-mark {
+    width: 32px; height: 32px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 14px; font-family: var(--mono);
+  }
+  .gate-brand { font-weight: 700; font-size: 18px; color: var(--ink); }
+  .gate-sub { font-size: 12px; color: var(--grey); margin-top: 6px; }
+  .gate-divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .gate-label { font-size: 12px; color: var(--ink-soft); margin-bottom: 8px; font-weight: 500; }
+  .gate-input {
+    width: 100%; padding: 11px 14px; font-family: var(--mono); font-size: 14px;
+    border: 1px solid var(--border); background: white; color: var(--ink);
+    outline: none; transition: border-color 0.2s;
+  }
+  .gate-input:focus { border-color: var(--blue); }
+  .gate-btn {
+    width: 100%; margin-top: 14px; padding: 12px 14px; background: var(--blue);
+    color: white; border: none; font-family: var(--sans); font-weight: 500;
+    font-size: 14px; cursor: pointer; transition: background 0.2s;
+  }
+  .gate-btn:hover { background: var(--blue-deep); }
+  .gate-err { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 16px; }
+  .gate-foot { font-size: 11px; color: var(--grey); margin-top: 24px; text-align: center; }
+  .hidden { display: none !important; }
+
+  /* === Top bar (Luckin-style) === */
+  .topnav {
+    background: var(--blue-deep); color: var(--white);
+    padding: 14px 0; position: sticky; top: 0; z-index: 100;
+  }
+  .topnav-inner {
+    max-width: 1320px; margin: 0 auto; padding: 0 32px;
+    display: flex; align-items: center; gap: 32px;
+  }
+  .topnav-brand { display: flex; align-items: center; gap: 10px; }
+  .topnav-mark {
+    width: 28px; height: 28px; background: var(--white); color: var(--blue-deep);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; font-family: var(--mono);
+  }
+  .topnav-title { font-weight: 600; font-size: 15px; }
+  .topnav-tag {
+    font-size: 11px; padding: 3px 8px; background: rgba(255,255,255,0.12);
+    border-radius: 2px; font-family: var(--mono); letter-spacing: 0.05em;
+  }
+  .topnav-links { display: flex; gap: 28px; margin-left: auto; }
+  .topnav-links a {
+    color: rgba(255,255,255,0.85); text-decoration: none; font-size: 13px;
+    font-weight: 500; transition: color 0.15s;
+  }
+  .topnav-links a:hover { color: var(--white); }
+
+  /* === Hero === */
+  .hero {
+    background: linear-gradient(180deg, var(--blue-softer) 0%, var(--white) 100%);
+    padding: 56px 0 40px; border-bottom: 1px solid var(--border);
+  }
+  .hero-inner { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+  .hero-eyebrow {
+    display: inline-block; padding: 4px 10px;
+    background: var(--blue); color: var(--white);
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.05em; margin-bottom: 16px;
+  }
+  .hero-title {
+    font-size: 44px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 16px;
+    max-width: 900px;
+  }
+  .hero-sub {
+    font-size: 17px; color: var(--ink-soft); max-width: 760px; line-height: 1.65;
+  }
+  .hero-meta {
+    margin-top: 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+    padding-top: 24px; border-top: 1px solid var(--border);
+  }
+  .hero-meta > div {}
+  .hero-meta dt {
+    font-size: 11px; color: var(--grey); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;
+  }
+  .hero-meta dd { font-family: var(--mono); font-size: 13px; color: var(--ink); font-weight: 500; }
+
+  /* === Container === */
+  .container { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 56px 0; }
+  section:not(:last-child) { border-bottom: 1px solid var(--border-soft); }
+
+  /* === Section header === */
+  .section-head {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 8px;
+  }
+  .section-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; background: var(--blue); color: white;
+    font-family: var(--mono); font-weight: 700; font-size: 18px;
+  }
+  .section-title { font-size: 28px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+  .section-tag {
+    margin-left: auto; padding: 4px 10px; font-family: var(--mono); font-size: 11px;
+    font-weight: 500; letter-spacing: 0.05em;
+  }
+  .tag-status-done { background: var(--success-bg); color: var(--success); }
+  .tag-status-pending { background: var(--pending-bg); color: var(--pending); }
+  .section-lead {
+    font-size: 16px; color: var(--ink-soft); margin: 16px 0 32px;
+    max-width: 880px; line-height: 1.7;
+  }
+
+  /* === Request cards (top overview) === */
+  .request-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .request-card {
+    border: 1px solid var(--border); background: white;
+    padding: 28px 28px; display: flex; flex-direction: column;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .request-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(0, 87, 184, 0.08); }
+  .request-card-head {
+    display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;
+  }
+  .request-card-no {
+    font-family: var(--mono); font-size: 13px; font-weight: 600;
+    color: var(--blue); letter-spacing: 0.05em;
+  }
+  .request-card-status {
+    margin-left: auto; padding: 3px 8px; font-family: var(--mono);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+  }
+  .request-card-title { font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 8px; line-height: 1.3; }
+  .request-card-desc { font-size: 14px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.65; flex: 1; }
+  .request-card-meta {
+    display: flex; gap: 24px; padding-top: 16px; border-top: 1px solid var(--border-soft);
+  }
+  .request-card-meta div { flex: 1; }
+  .request-card-meta dt { font-size: 11px; color: var(--grey); margin-bottom: 4px; }
+  .request-card-meta dd { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--ink); }
+  .request-card-jump {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 16px; padding: 8px 14px; background: var(--blue);
+    color: white; text-decoration: none; font-size: 13px; font-weight: 500;
+    align-self: flex-start; transition: background 0.15s;
+  }
+  .request-card-jump:hover { background: var(--blue-deep); }
+  .request-card-jump.pending {
+    background: white; color: var(--pending); border: 1px solid var(--pending);
+  }
+
+  /* === KPI block === */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--border); }
+  .kpi-cell {
+    padding: 24px 28px; border-right: 1px solid var(--border);
+    background: white; display: flex; flex-direction: column; justify-content: center;
+    min-height: 140px;
+  }
+  .kpi-cell:last-child { border-right: none; }
+  .kpi-label { font-size: 12px; color: var(--grey); margin-bottom: 8px; font-weight: 500; }
+  .kpi-num {
+    font-size: 44px; font-weight: 700; color: var(--blue-deep);
+    letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .kpi-num.danger { color: var(--danger); }
+  .kpi-num.warn { color: var(--warning); }
+  .kpi-num.pending { color: var(--pending); }
+  .kpi-unit { font-size: 14px; font-weight: 400; color: var(--grey); margin-left: 4px; }
+  .kpi-note { font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+
+  /* === Pending state card === */
+  .pending-block {
+    background: var(--pending-bg); border: 1px solid #C7D2FE;
+    padding: 32px 36px; margin: 24px 0;
+  }
+  .pending-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .pending-icon {
+    width: 40px; height: 40px; background: var(--pending); color: white;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .pending-title { font-size: 20px; font-weight: 700; color: var(--ink); }
+  .pending-text { font-size: 14px; color: var(--ink-soft); line-height: 1.7; margin-bottom: 16px; }
+  .pending-code {
+    background: var(--ink); color: #E5E7EB; padding: 16px 20px;
+    font-family: var(--mono); font-size: 13px; overflow-x: auto;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .pending-code .comment { color: #6B7280; }
+  .pending-code .flag { color: #FBBF24; }
+
+  /* === Info row === */
+  .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 24px 0; }
+  .info-card {
+    background: var(--blue-softer); padding: 18px 20px;
+    border-left: 3px solid var(--blue);
+  }
+  .info-card-label {
+    font-size: 11px; color: var(--blue); font-weight: 600;
+    letter-spacing: 0.05em; margin-bottom: 6px;
+  }
+  .info-card-value { font-family: var(--mono); font-size: 13px; color: var(--ink); font-weight: 500; }
+
+  /* === Tables === */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    background: var(--blue-deep); color: white; font-weight: 500;
+    text-align: left; padding: 10px 12px; font-size: 12px;
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+  td.mono { font-family: var(--mono); font-size: 12px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  td.center { text-align: center; }
+  tr:hover td { background: var(--blue-softer); }
+
+  /* === Funnel === */
+  .funnel-wrap { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; }
+  .funnel-svg { width: 100%; height: auto; max-width: 480px; margin-left: auto; }
+  .funnel-table { width: 100%; border-collapse: collapse; }
+  .funnel-table td { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .funnel-table tr:hover td { background: transparent; }
+  .funnel-table tr:last-child td { border-bottom: none; }
+  .funnel-lvl { font-family: var(--mono); font-weight: 700; color: var(--blue-deep); font-size: 14px; width: 100px; }
+  .funnel-count { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--ink); text-align: right; }
+  .funnel-delta { font-family: var(--mono); font-size: 13px; padding: 0 16px; }
+  .funnel-pct { font-family: var(--mono); font-size: 13px; color: var(--grey); width: 90px; text-align: right; }
+
+  /* === Level cards === */
+  .level-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .level-card {
+    border: 1px solid var(--border); background: white;
+    padding: 24px; transition: all 0.2s;
+  }
+  .level-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(0, 87, 184, 0.08); }
+  .level-badge {
+    font-family: var(--mono); font-weight: 600; font-size: 11px;
+    color: white; background: var(--blue); padding: 4px 10px;
+    display: inline-block; letter-spacing: 0.05em; margin-bottom: 14px;
+  }
+  .level-role { font-weight: 600; font-size: 16px; color: var(--ink); margin-bottom: 16px; }
+  .level-median {
+    font-size: 48px; font-weight: 700; color: var(--blue-deep);
+    letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .level-median-unit { font-size: 14px; color: var(--grey); margin-left: 4px; }
+  .level-median-label { font-size: 11px; color: var(--grey); margin-bottom: 10px; font-weight: 500; }
+  .level-stats { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+  .level-stat-row {
+    display: flex; justify-content: space-between; padding: 4px 0;
+    font-size: 12px;
+  }
+  .level-stat-row > span:first-child { color: var(--grey); }
+  .level-stat-row > span:last-child { font-family: var(--mono); font-weight: 600; color: var(--ink); }
+
+  /* === Histogram === */
+  .histo-block { margin-bottom: 24px; }
+  .histo-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .histo-lvl { font-family: var(--mono); font-weight: 700; font-size: 14px; color: var(--blue-deep); }
+  .histo-stat { font-size: 12px; color: var(--grey); }
+  .histo-row { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+  .histo-label { font-family: var(--mono); font-size: 11px; color: var(--grey); width: 90px; flex-shrink: 0; }
+  .histo-bar-bg { flex: 1; height: 22px; background: var(--border-soft); position: relative; }
+  .histo-bar { height: 100%; background: var(--blue); transition: width 0.5s; }
+  .histo-count { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--ink); width: 36px; text-align: right; }
+
+  /* === Pipeline tracks === */
+  .pipe-rule-row {
+    display: grid; grid-template-columns: 220px 1fr 80px; gap: 16px;
+    padding: 0 0 8px 0; align-items: end;
+  }
+  .pipe-rule-row > *:first-child { font-size: 11px; color: var(--grey); font-weight: 500; }
+  .pipe-track {
+    display: grid; grid-template-columns: 220px 1fr 80px; gap: 16px;
+    align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-soft);
+    transition: background 0.15s;
+  }
+  .pipe-track:hover { background: var(--blue-softer); }
+  .pipe-emp-name { font-weight: 600; color: var(--ink); font-size: 14px; }
+  .pipe-emp-meta { font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 3px; }
+  .pipe-total { font-family: var(--mono); font-weight: 700; font-size: 18px; color: var(--blue-deep); text-align: right; font-variant-numeric: tabular-nums; }
+  .pipe-total-unit { font-size: 10px; color: var(--grey); }
+
+  /* === Anomaly === */
+  .anom-card {
+    border-left: 4px solid var(--danger); background: var(--danger-bg);
+    padding: 20px 24px; margin-bottom: 14px;
+  }
+  .anom-card.warn { border-left-color: var(--warning); background: var(--warning-bg); }
+  .anom-name { font-weight: 700; color: var(--danger); font-size: 16px; margin-bottom: 4px; }
+  .anom-card.warn .anom-name { color: var(--warning); }
+  .anom-id { font-family: var(--mono); font-size: 11px; color: var(--grey); margin-bottom: 12px; }
+  .anom-detail { font-size: 14px; color: var(--ink-soft); line-height: 1.65; }
+  .anom-detail strong { color: var(--ink); font-weight: 600; }
+
+  /* === Filter bar === */
+  .filter-bar {
+    display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-bar input {
+    font-family: var(--sans); font-size: 13px; padding: 8px 12px;
+    border: 1px solid var(--border); background: white; outline: none;
+    min-width: 240px; transition: border-color 0.15s;
+  }
+  .filter-bar input:focus { border-color: var(--blue); }
+  .filter-chip {
+    padding: 6px 12px; font-size: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: white; color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .filter-chip:hover { border-color: var(--blue); color: var(--blue); }
+  .filter-chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+  .filter-count { font-family: var(--mono); font-size: 12px; color: var(--grey); margin-left: auto; }
+
+  /* === Tags === */
+  .tag {
+    display: inline-block; padding: 2px 8px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+    min-width: 36px; text-align: center;
+  }
+  .tag-active { background: var(--success-bg); color: var(--success); }
+  .tag-sep { background: #FEF3C7; color: var(--warning); }
+  .tag-anom { background: var(--danger-bg); color: var(--danger); }
+
+  /* === Two-col === */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .two-col h3 { font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 16px; }
+
+  /* === Footer === */
+  footer {
+    background: var(--blue-deep); color: white; padding: 36px 0 24px; margin-top: 56px;
+  }
+  .footer-inner { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+  .footer-top {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+  .footer-mark {
+    width: 36px; height: 36px; background: white; color: var(--blue-deep);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; font-family: var(--mono);
+  }
+  .footer-brand { font-weight: 700; font-size: 18px; }
+  .footer-meta {
+    margin-left: auto; font-family: var(--mono); font-size: 12px;
+    color: rgba(255,255,255,0.75); letter-spacing: 0.05em;
+  }
+  .footer-bottom {
+    margin-top: 16px; display: flex; justify-content: space-between;
+    font-size: 12px; color: rgba(255,255,255,0.75);
+  }
+  .footer-series {
+    margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.15);
+  }
+  .footer-series-label {
+    font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+  }
+  .footer-series-list {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 12px; color: rgba(255,255,255,0.85);
+  }
+  .footer-series-list .current { color: white; font-weight: 600; }
+
+  /* === Story strip === */
+  .story-strip {
+    background: var(--blue-deep); color: white;
+    padding: 48px 0; margin: 56px 0;
+  }
+  .story-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .story-box {
+    border: 1px solid rgba(255,255,255,0.2); padding: 24px 24px;
+    background: rgba(255,255,255,0.04);
+  }
+  .story-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em;
+    color: #93C5FD; margin-bottom: 12px; }
+  .story-headline { font-weight: 700; font-size: 19px; line-height: 1.3; margin-bottom: 12px; }
+  .story-body { font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.85); }
+
+  /* === Findings === */
+  .findings {
+    list-style: none; counter-reset: finding;
+    background: white; border: 1px solid var(--border);
+  }
+  .findings li {
+    counter-increment: finding;
+    padding: 18px 24px 18px 70px; position: relative;
+    border-bottom: 1px solid var(--border-soft); font-size: 15px; line-height: 1.65;
+    color: var(--ink-soft);
+  }
+  .findings li:last-child { border-bottom: none; }
+  .findings li::before {
+    content: counter(finding, decimal-leading-zero);
+    position: absolute; left: 24px; top: 18px;
+    font-family: var(--mono); font-weight: 600; font-size: 14px;
+    color: var(--blue); background: var(--blue-softer); padding: 4px 8px;
+  }
+  .findings li strong { color: var(--ink); font-weight: 600; }
+
+  /* === Action cards === */
+  .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .action-card {
+    background: white; border: 1px solid var(--border);
+    border-top: 4px solid var(--blue); padding: 22px 24px;
+  }
+  .action-card.mid { border-top-color: var(--blue-deep); }
+  .action-card.long { border-top-color: var(--success); }
+  .action-period {
+    font-family: var(--mono); font-size: 11px; color: var(--blue);
+    font-weight: 600; letter-spacing: 0.05em; margin-bottom: 10px;
+  }
+  .action-card.mid .action-period { color: var(--blue-deep); }
+  .action-card.long .action-period { color: var(--success); }
+  .action-title { font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 10px; line-height: 1.3; }
+  .action-body { font-size: 13px; color: var(--ink-soft); line-height: 1.65; }
+
+  /* === Responsive === */
+  @media (max-width: 1024px) {
+    .hero-title { font-size: 36px; }
+    .hero-meta, .request-grid, .kpi-row, .level-grid, .two-col, .funnel-wrap, .story-grid, .action-grid, .info-grid { grid-template-columns: repeat(2, 1fr); }
+    .kpi-cell { border-bottom: 1px solid var(--border); }
+    .kpi-cell:nth-child(2) { border-right: none; }
+    .level-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .container, .hero-inner, .footer-inner, .topnav-inner { padding-left: 16px; padding-right: 16px; }
+    .hero-title { font-size: 26px; }
+    .section-title { font-size: 22px; }
+    .hero-meta, .request-grid, .kpi-row, .level-grid, .two-col, .funnel-wrap, .story-grid, .action-grid, .info-grid {
+      grid-template-columns: 1fr;
+    }
+    .kpi-cell { border-right: none; }
+    .topnav-links { display: none; }
+    .pipe-track, .pipe-rule-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  @media print {
+    .gate, footer, .topnav, .filter-bar { display: none !important; }
+    section { page-break-inside: avoid; padding: 24px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Password gate -->
+<div id="gate" class="gate">
+  <div class="gate-card">
+    <div class="gate-logo">
+      <div class="gate-logo-mark">L</div>
+      <div>
+        <div class="gate-brand">瑞幸咖啡北美</div>
+        <div class="gate-sub">人事系统数据分析仪表盘</div>
+      </div>
+    </div>
+    <div class="gate-divider"></div>
+    <div class="gate-label">访问密码</div>
+    <input id="gateInput" class="gate-input" type="password" placeholder="·······" autofocus />
+    <button id="gateBtn" class="gate-btn">进入仪表盘</button>
+    <div id="gateErr" class="gate-err"></div>
+    <div class="gate-foot">机密 · 仅供内部使用</div>
+  </div>
+</div>
+
+<main id="app" class="hidden">
+
+<!-- Top nav -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="topnav-brand">
+      <div class="topnav-mark">L</div>
+      <div class="topnav-title">瑞幸咖啡北美</div>
+      <div class="topnav-tag">数据库运营组</div>
+    </div>
+    <div class="topnav-links">
+      <a href="#req-1">需求一 · SM</a>
+      <a href="#req-2">需求二 · LSO</a>
+      <a href="#req-2-funnel">培训漏斗</a>
+      <a href="#req-2-pipeline">全通道队列</a>
+      <a href="#req-2-table">全量数据</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-eyebrow">人事系统数据分析 · 2026 Q2</span>
+    <h1 class="hero-title">职位变更与 LSO 资质获取分析</h1>
+    <p class="hero-sub">本仪表盘汇总两项 HR 数据需求：(一) 2026 年初至今 SM 职位变更人员清单；(二) 过去 12 个月 LSO 各等级资质获取周期分析。数据均来源于 iadmin / iehr 后端，只读链路通过 MCP DB Gateway 接入。</p>
+    <dl class="hero-meta">
+      <div><dt>数据时段</dt><dd>2025-05-27 → 2026-05-27</dd></div>
+      <div><dt>数据源</dt><dd>iehr.luckyus_iehr.*</dd></div>
+      <div><dt>租户</dt><dd>LKUS</dd></div>
+      <div><dt>生成日期</dt><dd>2026-05-27</dd></div>
+    </dl>
+  </div>
+</header>
+
+<!-- Request overview cards -->
+<section style="padding-top: 40px; padding-bottom: 40px;">
+  <div class="container">
+    <div class="request-grid">
+
+      <!-- Request 1 card -->
+      <div class="request-card">
+        <div class="request-card-head">
+          <span class="request-card-no">需求一</span>
+          <span class="request-card-status tag-status-pending" style="margin-left: auto;">数据待提取</span>
+        </div>
+        <div class="request-card-title">从其他职位变更为 SM 的人员清单</div>
+        <p class="request-card-desc">
+          统计 2026-01-01 至 2026-05-27 期间，iadmin 系统内所有从其他职位 (例如 ASM / SMT / SS / BR 等) 变更为 SM (店长) 职位的小伙伴人数与人员名单。
+        </p>
+        <div class="request-card-meta">
+          <div><dt>时间窗口</dt><dd>2026-01-01 → 2026-05-27</dd></div>
+          <div><dt>数据路径</dt><dd>iadmin · 人事系统 · 员工管理</dd></div>
+        </div>
+        <a href="#req-1" class="request-card-jump pending">查看分析方案 →</a>
+      </div>
+
+      <!-- Request 2 card -->
+      <div class="request-card">
+        <div class="request-card-head">
+          <span class="request-card-no">需求二</span>
+          <span class="request-card-status tag-status-done" style="margin-left: auto;">已完成</span>
+        </div>
+        <div class="request-card-title">LSO 资质获取周期分析</div>
+        <p class="request-card-desc">
+          统计 2025-05-27 至 2026-05-27 期间，小伙伴入职日期至获取 LSO100 / LSO200 / LSO300 / LSO400 资质的天数分布，分四张明细表。
+        </p>
+        <div class="request-card-meta">
+          <div><dt>时间窗口</dt><dd>2025-05-27 → 2026-05-27</dd></div>
+          <div><dt>数据路径</dt><dd>iadmin · 资质管理 · LSOxxx</dd></div>
+        </div>
+        <a href="#req-2" class="request-card-jump">查看完整分析 →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- === REQUEST 1: SM Promotion === -->
+<section id="req-1">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">一</span>
+      <h2 class="section-title">SM 职位变更人员分析</h2>
+      <span class="section-tag tag-status-pending">数据待提取</span>
+    </div>
+    <p class="section-lead">
+      本需求要求统计 2026-01-01 至 2026-05-27 期间，iadmin 人事系统内所有从其他职位变更为 SM (店长 / Store Manager) 的小伙伴。分析方案已完成，等待运行数据提取脚本后回填结果。
+    </p>
+
+    <!-- Data scope info -->
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-label">时间窗口</div>
+        <div class="info-card-value">2026-01-01 至 2026-05-27 (PT 业务口径)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">数据源表</div>
+        <div class="info-card-value">t_ehr_employee_post_relation (主岗历史)</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">目标职位</div>
+        <div class="info-card-value">SM · 店长 (post_code = LKUS00000082)</div>
+      </div>
+    </div>
+
+    <!-- Pending block with extraction methodology -->
+    <div class="pending-block">
+      <div class="pending-head">
+        <div class="pending-icon">⟳</div>
+        <div>
+          <div class="pending-title">数据提取方案 · 待运行</div>
+          <div style="font-size: 13px; color: var(--grey); margin-top: 4px;">完整 Claude Code prompt 已就绪，详见配套交付件 iadmin_sm_promotion_query_prompt.md</div>
+        </div>
+      </div>
+      <p class="pending-text">
+        分析逻辑：在 iehr <code style="background: white; padding: 2px 6px; font-family: var(--mono); font-size: 12px;">t_ehr_employee_post_relation</code> 表中查找时间窗口内 <strong>new_post_code = SM 且 old_post_code ≠ SM</strong> 的变更记录，关联 <code style="background: white; padding: 2px 6px; font-family: var(--mono); font-size: 12px;">t_ehr_employee</code> 主表得到姓名、邮箱、所属门店、原始职位。对同一人在窗口内多次反复变更 (如 ASM → SM → ASM → SM) 取首次晋升记录但保留全部历史。
+      </p>
+      <div class="pending-code"><span class="comment"># 运行方式 (在 Claude Code 终端，MCP DB Gateway 已连接)</span>
+claude <span class="flag">--dangerously-skip-permissions</span> -p "$(cat iadmin_sm_promotion_query_prompt.md)"
+
+<span class="comment"># 产出两个文件:</span>
+<span class="comment">#   iadmin_sm_promotions_2026H1.csv      — 完整明细 CSV</span>
+<span class="comment">#   iadmin_sm_promotions_2026H1_summary.md — 中文小结 (含人数 + 名单)</span></div>
+    </div>
+
+    <!-- KPI placeholder -->
+    <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); margin: 32px 0 16px;">数据回填后将呈现</h3>
+    <div class="kpi-row" style="opacity: 0.7;">
+      <div class="kpi-cell">
+        <div class="kpi-label">变更为 SM 人数</div>
+        <div class="kpi-num pending">— <span class="kpi-unit">人</span></div>
+        <div class="kpi-note">独立计数 (去重)</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">变更记录数</div>
+        <div class="kpi-num pending">— <span class="kpi-unit">条</span></div>
+        <div class="kpi-note">含反复变更</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">涉及门店数</div>
+        <div class="kpi-num pending">— <span class="kpi-unit">家</span></div>
+        <div class="kpi-note">按所属门店统计</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">主要来源职位</div>
+        <div class="kpi-num pending" style="font-size: 28px;">—</div>
+        <div class="kpi-note">变更前职位分布</div>
+      </div>
+    </div>
+
+    <!-- Sample table layout -->
+    <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); margin: 32px 0 16px;">人员名单表格结构</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 40px;">序号</th>
+          <th>员工编号</th>
+          <th>姓名</th>
+          <th>邮箱</th>
+          <th>变更前职位</th>
+          <th>变更后职位</th>
+          <th>生效日期</th>
+          <th>所属门店</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="8" style="text-align: center; padding: 32px; color: var(--grey); font-style: italic;">数据提取后填充，表格结构与 LCNA-HR-LSO-2026-002 工作簿一致</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top: 16px; font-size: 13px; color: var(--grey);">
+      数据回填工作流：运行提取脚本 → 拿到 CSV → 重新生成 data.json → 重建 index.html → 重新部署 Vercel。完整步骤见配套 README.md。
+    </p>
+  </div>
+</section>
+
+<!-- === REQUEST 2: LSO Analysis === -->
+<section id="req-2">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">二</span>
+      <h2 class="section-title">LSO 资质获取周期分析</h2>
+      <span class="section-tag tag-status-done">已完成</span>
+    </div>
+    <p class="section-lead">
+      本需求要求按 LSO100 / 200 / 300 / 400 四级，分别统计 2025-05-27 至 2026-05-27 期间小伙伴入职日至获取该资质的天数。原始数据来源于 iehr <code style="background: var(--blue-softer); padding: 2px 6px; font-family: var(--mono); font-size: 12px;">t_ehr_employee_qualification_info</code> 表，对接云学堂 LMS 同步。
+    </p>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-cell">
+        <div class="kpi-label">独立小伙伴</div>
+        <div class="kpi-num" id="kpi-emps">—<span class="kpi-unit">人</span></div>
+        <div class="kpi-note">获得至少一级 LSO 资质</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">资质证书</div>
+        <div class="kpi-num" id="kpi-records">—<span class="kpi-unit">张</span></div>
+        <div class="kpi-note">四级累计颁发</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">全通道学员</div>
+        <div class="kpi-num" id="kpi-fp">—<span class="kpi-unit">人</span></div>
+        <div class="kpi-note">窗口内完成 LSO100→LSO400</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">数据异常</div>
+        <div class="kpi-num danger" id="kpi-anom">—<span class="kpi-unit">行</span></div>
+        <div class="kpi-note">获证日期早于入职日期</div>
+      </div>
+    </div>
+
+    <!-- Core findings -->
+    <h3 style="font-size: 20px; font-weight: 700; color: var(--ink); margin: 40px 0 16px;">核心发现</h3>
+    <ol class="findings">
+      <li><strong>培训管线运转健康。</strong>窗口内共 210 位小伙伴获得至少一级 LSO 资质，累计 372 张证书。其中 18 位 (8.6%) 完成 LSO100 → LSO400 全通道，构成北美店长岗位的核心人才储备。</li>
+      <li><strong>各级中位天数呈准线性递增：</strong>LSO100 = 44 天 → LSO200 = 77 天 → LSO300 = 108 天 → LSO400 = 119 天，表明各级培训按计划节奏推进，未出现明显堆积。</li>
+      <li><strong>漏斗收窄主要发生于咖啡师 → 主管段。</strong>LSO100 → LSO200 出证人数由 203 降至 105 (−48.3%)，是培训管线最显著的瓶颈。需结合人事数据进一步细分 "在职放弃" 与 "离职流失"。</li>
+      <li><strong>培训投入与人员留存正相关。</strong>各级流失率：LSO100 25.1% → LSO200 17.1% → LSO300 12.5% → LSO400 16.7%。LSO400 端微幅回升 (+4.2pp)，反映资深店长岗位独立性较高、跳槽机会更多。</li>
+      <li><strong>个人级别 vs 全局中位数存在统计悖论。</strong>全局看 LSO300 → LSO400 中位差仅 11 天，看似最易跨越；但锁定 18 人全通道队列后按个人复盘，中位差实为 51 天、最长 180 天，是培训通道中最长且差异最大的一段。该差异如不识别，业务侧极易得出错误结论。</li>
+      <li><strong>数据异常 4 行涉及 2 位小伙伴。</strong>Daniel Chu (US202510060002) 员工编号与入职日期不一致，疑似再入职数据重建未刷工号；Jocelyn Lopez (US202510140002) 属合理的预入职培训场景，无需修正。详见第七节。</li>
+    </ol>
+  </div>
+</section>
+
+<!-- === Funnel === -->
+<section id="req-2-funnel">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">三</span>
+      <h2 class="section-title">培训管线漏斗</h2>
+    </div>
+    <p class="section-lead">窗口期内各级 LSO 资质获取人数构成北美店长培养的核心漏斗。环比留存率反映各段培养通畅程度。</p>
+
+    <div class="funnel-wrap">
+      <div>
+        <table class="funnel-table">
+          <tr>
+            <td class="funnel-lvl">LSO100</td>
+            <td class="funnel-count">203</td>
+            <td class="funnel-delta">—</td>
+            <td class="funnel-pct">100.0%</td>
+            <td style="color: var(--ink-soft); font-size: 13px;">新入门</td>
+          </tr>
+          <tr>
+            <td class="funnel-lvl">LSO200</td>
+            <td class="funnel-count">105</td>
+            <td class="funnel-delta" style="color: var(--danger); font-weight: 700;">−98</td>
+            <td class="funnel-pct">51.7%</td>
+            <td style="color: var(--danger); font-size: 13px; font-weight: 600;">最显著瓶颈段</td>
+          </tr>
+          <tr>
+            <td class="funnel-lvl">LSO300</td>
+            <td class="funnel-count">40</td>
+            <td class="funnel-delta" style="color: var(--warning); font-weight: 700;">−65</td>
+            <td class="funnel-pct">19.7%</td>
+            <td style="color: var(--ink-soft); font-size: 13px;">副店长梯队</td>
+          </tr>
+          <tr>
+            <td class="funnel-lvl">LSO400</td>
+            <td class="funnel-count">24</td>
+            <td class="funnel-delta" style="color: var(--warning); font-weight: 700;">−16</td>
+            <td class="funnel-pct">11.8%</td>
+            <td style="color: var(--ink-soft); font-size: 13px;">店长授证</td>
+          </tr>
+        </table>
+        <p style="margin-top: 16px; font-size: 12px; color: var(--grey); line-height: 1.6;">
+          注：本图为窗口期出证人数比较，并非同一群体的失效率。LSO100 / LSO200 持证者尚处于 "向上发展" 状态，并非所有人需在窗口内取得后续等级。
+        </p>
+      </div>
+
+      <div>
+        <svg class="funnel-svg" viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="20" width="600" height="60" fill="#0057B8" />
+          <text x="20" y="56" fill="white" font-family="IBM Plex Mono" font-size="14" font-weight="700">LSO100</text>
+          <text x="580" y="48" fill="white" font-family="IBM Plex Mono" font-size="24" font-weight="700" text-anchor="end">203</text>
+          <text x="580" y="68" fill="white" font-family="Noto Sans SC" font-size="11" text-anchor="end" opacity="0.85">人 · 100.0%</text>
+
+          <polygon points="0,90 600,90 525,150 75,150" fill="#0057B8" opacity="0.85" />
+          <text x="95" y="125" fill="white" font-family="IBM Plex Mono" font-size="14" font-weight="700">LSO200</text>
+          <text x="505" y="125" fill="white" font-family="IBM Plex Mono" font-size="22" font-weight="700" text-anchor="end">105</text>
+          <text x="505" y="142" fill="white" font-family="Noto Sans SC" font-size="10" text-anchor="end" opacity="0.85">51.7%</text>
+
+          <polygon points="75,160 525,160 410,220 190,220" fill="#003F87" opacity="0.92" />
+          <text x="210" y="195" fill="white" font-family="IBM Plex Mono" font-size="14" font-weight="700">LSO300</text>
+          <text x="390" y="195" fill="white" font-family="IBM Plex Mono" font-size="22" font-weight="700" text-anchor="end">40</text>
+          <text x="390" y="212" fill="white" font-family="Noto Sans SC" font-size="10" text-anchor="end" opacity="0.85">19.7%</text>
+
+          <polygon points="190,230 410,230 335,290 265,290" fill="#003F87" />
+          <text x="280" y="265" fill="white" font-family="IBM Plex Mono" font-size="13" font-weight="700">LSO400</text>
+          <text x="325" y="282" fill="white" font-family="IBM Plex Mono" font-size="16" font-weight="700" text-anchor="end">24</text>
+
+          <line x1="0" y1="80" x2="600" y2="80" stroke="white" stroke-width="1" stroke-dasharray="2,4" />
+          <text x="300" y="325" fill="#6B7280" font-family="Noto Sans SC" font-size="11" text-anchor="middle">每层 = 窗口期内获取该级资质的人数</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === Story strip === -->
+<section class="story-strip">
+  <div class="container">
+    <div class="story-grid">
+      <div class="story-box">
+        <div class="story-kicker">发现 · 01</div>
+        <div class="story-headline">店长培养实际是最长一段</div>
+        <p class="story-body">全局中位差仅 11 天，但锁定 18 位完成全通道的小伙伴后，LSO300 → LSO400 个人中位差实为 51 天，最长达 180 天。是培训通道差异最大的段。</p>
+      </div>
+      <div class="story-box">
+        <div class="story-kicker">发现 · 02</div>
+        <div class="story-headline">培训投入降低小伙伴流失</div>
+        <p class="story-body">流失率随资质等级单调递减：LSO100 25.1% → LSO300 12.5%，证实培训投入对中阶小伙伴留存的正向作用。LSO400 端微幅回升 (+4.2pp) 提示资深店长跳槽风险。</p>
+      </div>
+      <div class="story-box">
+        <div class="story-kicker">发现 · 03</div>
+        <div class="story-headline">主管晋升段是最大瓶颈</div>
+        <p class="story-body">LSO100 → LSO200 出证人数由 203 降至 105，单段 −48.3%。该段对应咖啡师晋升值班主管，需结合在职放弃 vs 离职流失数据进一步分析。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === Per-level distribution === -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">四</span>
+      <h2 class="section-title">各等级获证周期分布</h2>
+    </div>
+    <p class="section-lead">每一级 LSO 资质的天数分布描述性统计。点击卡片查看更详细的频次分布。</p>
+
+    <div class="level-grid" id="level-cards"></div>
+
+    <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); margin: 40px 0 8px;">天数频次分布</h3>
+    <p style="font-size: 13px; color: var(--grey); margin-bottom: 20px;">按天数区间统计各级出证人数</p>
+    <div id="histograms"></div>
+  </div>
+</section>
+
+<!-- === Pipeline cohort === -->
+<section id="req-2-pipeline">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">五</span>
+      <h2 class="section-title">全通道队列实地复盘</h2>
+    </div>
+    <p class="section-lead">
+      <strong>这 18 位小伙伴在窗口期内完成了 LSO100 → LSO200 → LSO300 → LSO400 的完整培养路径。</strong>下方将每位入职日记为零点，按实际天数标注四级证书获取时点，便于直观比较培养节奏。
+    </p>
+
+    <div style="margin-top: 28px;">
+      <div class="pipe-rule-row">
+        <div>员工 / 门店</div>
+        <div></div>
+        <div style="text-align: right;">全程天数</div>
+      </div>
+      <div id="pipeline-tracks"></div>
+    </div>
+
+    <!-- Aggregate stats -->
+    <div style="margin-top: 32px; padding: 28px 32px; background: var(--blue-softer); border: 1px solid var(--border);">
+      <h4 style="font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 16px;">全通道队列段间天数统计</h4>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px;">
+        <div>
+          <div style="font-size: 11px; color: var(--grey); margin-bottom: 6px; font-weight: 500;">LSO100 → LSO200</div>
+          <div style="font-size: 32px; font-weight: 700; color: var(--blue-deep); letter-spacing: -0.02em;">22<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天 (中位)</span></div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 4px;">均值 32.1 · 最长 80</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; color: var(--grey); margin-bottom: 6px; font-weight: 500;">LSO200 → LSO300</div>
+          <div style="font-size: 32px; font-weight: 700; color: var(--blue-deep); letter-spacing: -0.02em;">23<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天 (中位)</span></div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 4px;">均值 23.5 · 最长 71</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; color: var(--danger); margin-bottom: 6px; font-weight: 600;">LSO300 → LSO400 ⚠</div>
+          <div style="font-size: 32px; font-weight: 700; color: var(--danger); letter-spacing: -0.02em;">51<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天 (中位)</span></div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 4px;">均值 65.9 · 最长 180</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; color: var(--grey); margin-bottom: 6px; font-weight: 500;">全程 (入职→LSO400)</div>
+          <div style="font-size: 32px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em;">149<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天</span></div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 4px;">~5 个月 · 最快 36 天</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === Attrition & Pattern === -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">六</span>
+      <h2 class="section-title">人员流失与持证模式</h2>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>流失率与资质等级</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 24px; line-height: 1.65;">各级 LSO 持证人当前在职状态分布。流失率随资质等级单调递减直至 LSO300，LSO400 端微幅回升。</p>
+        <div id="attrition-bars"></div>
+      </div>
+      <div>
+        <h3>210 人持证模式分布</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 24px; line-height: 1.65;">按 "LSO100-200-300-400" 持证模式分组，"1" 表示已获、"0" 表示未获。最大群体 1000 (105 人) 为咖啡师阶段。</p>
+        <div id="pattern-bars"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === Top depts / positions === -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">七</span>
+      <h2 class="section-title">门店与岗位分布</h2>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>高产门店 Top 15</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 16px;">窗口期内 LSO 资质产出最多的门店 / 部门</p>
+        <table>
+          <thead>
+            <tr><th style="width: 32px;">#</th><th>门店 / 部门</th><th class="num">L100</th><th class="num">L200</th><th class="num">L300</th><th class="num">L400</th><th class="num">合计</th></tr>
+          </thead>
+          <tbody id="dept-tbody"></tbody>
+        </table>
+      </div>
+      <div>
+        <h3>当前职位持证分布</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 16px;">按当前在职职位统计 LSO 资质持有</p>
+        <table>
+          <thead>
+            <tr><th>职位</th><th class="num">L100</th><th class="num">L200</th><th class="num">L300</th><th class="num">L400</th><th class="num">合计</th></tr>
+          </thead>
+          <tbody id="pos-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === Anomalies === -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">八</span>
+      <h2 class="section-title">异常数据与离群值</h2>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3 style="color: var(--danger);">⚠ 数据异常 (4 行 / 2 人)</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.65;">获证日期早于入职日期记录的 4 条记录，均涉及 HR 档案管理问题而非培训数据。</p>
+
+        <div class="anom-card">
+          <div class="anom-name">Daniel Chu</div>
+          <div class="anom-id">US202510060002 · Operation Manager · 已离职</div>
+          <div class="anom-detail">
+            3 行异常 (LSO100 −177 天 / LSO200 −179 天 / LSO400 −139 天)。员工编号 "202510" 编码对应 2025-10-06，但 t_ehr_employee.join_date 字段记录 2026-05-04，当前状态为已离职。
+            员工编号与入职日期严重不一致，疑似 <strong>"再入职后重建员工记录但未刷新工号，且后又再次离职"</strong>。
+            同时 Daniel Chu 跳过了 LSO300 (持证模式 1101)，符合资深内部转岗人员的资质背景。
+            建议 HR 通过云学堂记录核对其原始入职日期与多次离职 / 再入职的完整历史。
+          </div>
+        </div>
+
+        <div class="anom-card warn">
+          <div class="anom-name">Jocelyn Lopez</div>
+          <div class="anom-id">US202510140002 · Barista · 108th & Broadway · 在职</div>
+          <div class="anom-detail">
+            1 行异常 (LSO100 −30 天)。入职 2026-01-18，获证 2025-12-19。属<strong>预入职培训</strong>场景：在正式入职手续生效前已通过云学堂完成 LSO100 培训。属合理业务流程，<strong>无需修正</strong>，但需注明天数计算口径。
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3>培训阻塞 Top 5</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.65;">各级最慢获证小伙伴。建议纳入个案辅导清单。</p>
+        <div id="slowest-block"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- === Recommendations === -->
+<section>
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">九</span>
+      <h2 class="section-title">行动建议</h2>
+    </div>
+
+    <div class="action-grid">
+      <div class="action-card">
+        <div class="action-period">短期 · Q3 2026</div>
+        <div class="action-title">个案辅导 11 位 LSO100 阻塞小伙伴</div>
+        <div class="action-body">复核获证 &gt;100 天的 11 位 LSO100 小伙伴的培训进度，由所属门店 SM / OM 提供单独辅导计划。重点关注仍为 Barista 在职的 Jose Velasquez (180 天)、Taylor Spivey (158 天)、Xiao Lan Zhong (149 天)。</div>
+      </div>
+
+      <div class="action-card mid">
+        <div class="action-period">中期 · 6 个月</div>
+        <div class="action-title">LSO200 漏斗专题分析</div>
+        <div class="action-body">在 LCNA HR / 培训委员会会议引入本仪表盘，对 LSO100 → LSO200 漏斗段 (−98 人) 进行专题分析。结合入职后职位变更日志，拆分 "在职放弃" vs "离职流失"。</div>
+      </div>
+
+      <div class="action-card long">
+        <div class="action-period">长期 · 12 个月</div>
+        <div class="action-title">资质 - 职业发展闭环</div>
+        <div class="action-body">将 LSO 资质获取与 iadmin 职位变更日志关联，回答 "获证后多久晋升" 类问题，连接资质培养与职业发展数据闭环。预计每季度更新仪表盘。</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 28px; padding: 24px 28px; border: 1px solid var(--border); background: var(--blue-softer);">
+      <h4 style="font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">数据治理建议</h4>
+      <ul style="list-style: none; padding-left: 0;">
+        <li style="padding: 6px 0; padding-left: 22px; position: relative; font-size: 13px; color: var(--ink-soft);">
+          <span style="position: absolute; left: 0; color: var(--blue); font-weight: 700;">→</span>
+          请 HR 复核 Daniel Chu (US202510060002) 的入职日期与员工编号一致性问题。若涉及再入职，建议在 iehr 增加 <code style="font-family: var(--mono); background: white; padding: 1px 6px; font-size: 12px;">original_hire_date</code> 字段。
+        </li>
+        <li style="padding: 6px 0; padding-left: 22px; position: relative; font-size: 13px; color: var(--ink-soft);">
+          <span style="position: absolute; left: 0; color: var(--blue); font-weight: 700;">→</span>
+          建议与云学堂团队沟通，将 <code style="font-family: var(--mono); background: white; padding: 1px 6px; font-size: 12px;">obtaining_date</code> 字段升级为带时区的 DATETIME 类型 (当前 varchar(30) ISO 字符串)。
+        </li>
+        <li style="padding: 6px 0; padding-left: 22px; position: relative; font-size: 13px; color: var(--ink-soft);">
+          <span style="position: absolute; left: 0; color: var(--blue); font-weight: 700;">→</span>
+          建议在 <code style="font-family: var(--mono); background: white; padding: 1px 6px; font-size: 12px;">t_ehr_employee</code> 增加 store_id 字段，避免通过 dept_name 字符串解析门店身份。
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- === Full data table === -->
+<section id="req-2-table">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num">十</span>
+      <h2 class="section-title">全量明细数据</h2>
+    </div>
+    <p class="section-lead">需求二的 372 条记录全表，支持搜索、按等级 / 状态 / 异常筛选。</p>
+
+    <div class="filter-bar">
+      <input type="text" id="search" placeholder="搜索姓名 / 员工编号 / 门店 / 邮箱..." />
+      <button class="filter-chip active" data-level="ALL">全部</button>
+      <button class="filter-chip" data-level="LSO100">LSO100</button>
+      <button class="filter-chip" data-level="LSO200">LSO200</button>
+      <button class="filter-chip" data-level="LSO300">LSO300</button>
+      <button class="filter-chip" data-level="LSO400">LSO400</button>
+      <button class="filter-chip" data-status="Active">仅在职</button>
+      <button class="filter-chip" data-status="Separated">仅离职</button>
+      <button class="filter-chip" data-anom="Y">仅异常</button>
+      <span class="filter-count" id="filter-count">显示 372 / 372 行</span>
+    </div>
+
+    <div style="overflow-x: auto; border: 1px solid var(--border);">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th>员工编号</th><th>姓名</th><th>邮箱</th>
+            <th>入职日期</th><th>获证日期</th><th class="num">天数</th>
+            <th>等级</th><th>门店</th><th>职位</th><th>状态</th>
+          </tr>
+        </thead>
+        <tbody id="data-tbody"></tbody>
+      </table>
+    </div>
+
+    <p style="margin-top: 12px; font-size: 12px; color: var(--grey);">需求二配套 Excel 工作簿 LCNA-HR-LSO-2026-002.xlsx 包含 9 个工作表，含明细 + 透视。</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-mark">L</div>
+      <div>
+        <div class="footer-brand">瑞幸咖啡北美 · 数据库运营组</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 2px;">人事系统数据分析仪表盘 · 仅供内部使用</div>
+      </div>
+      <div class="footer-meta">生成 2026·05·27 · 版本 v1.0</div>
+    </div>
+
+    <div class="footer-series">
+      <div class="footer-series-label">配套交付件</div>
+      <div class="footer-series-list">
+        <span>LCNA-HR-LSO-2026-001 · 分析报告 (Word)</span>
+        <span>LCNA-HR-LSO-2026-002 · 明细清单 (Excel)</span>
+        <span class="current">LCNA-HR-LSO-2026-003 · 仪表盘 (本页)</span>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 Luckin Coffee North America · 机密 · 内部使用</span>
+      <span>数据源: iehr.luckyus_iehr.* · 租户 LKUS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/*__DATA_PLACEHOLDER__*/
+
+(function() {
+  const PW = 'luckin2026';
+  const gate = document.getElementById('gate');
+  const app = document.getElementById('app');
+  const input = document.getElementById('gateInput');
+  const btn = document.getElementById('gateBtn');
+  const err = document.getElementById('gateErr');
+
+  function attempt() {
+    if (input.value === PW) {
+      gate.classList.add('hidden');
+      app.classList.remove('hidden');
+      sessionStorage.setItem('lkus_hr_2026', '1');
+      render();
+    } else {
+      err.textContent = '密码错误';
+      input.value = '';
+      input.focus();
+    }
+  }
+  btn.addEventListener('click', attempt);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') attempt(); });
+
+  if (sessionStorage.getItem('lkus_hr_2026') === '1') {
+    gate.classList.add('hidden');
+    app.classList.remove('hidden');
+    render();
+  }
+})();
+
+function render() {
+  renderKPIs();
+  renderLevelCards();
+  renderHistograms();
+  renderPipelineTracks();
+  renderAttritionBars();
+  renderPatternBars();
+  renderDeptTable();
+  renderPosTable();
+  renderSlowest();
+  renderDataTable();
+  attachFilters();
+}
+
+function renderKPIs() {
+  const m = DATA.meta;
+  document.getElementById('kpi-emps').innerHTML = m.total_emps + '<span class="kpi-unit">人</span>';
+  document.getElementById('kpi-records').innerHTML = m.total_records + '<span class="kpi-unit">张</span>';
+  document.getElementById('kpi-fp').innerHTML = m.full_pipeline_emps + '<span class="kpi-unit">人</span>';
+  document.getElementById('kpi-anom').innerHTML = DATA.anomalies.length + '<span class="kpi-unit">行</span>';
+}
+
+function renderLevelCards() {
+  const roles = {
+    LSO100: { role: '咖啡师 (Barista)', code: 'KFS' },
+    LSO200: { role: '值班主管 (Shift Supervisor)', code: 'ZBZG' },
+    LSO300: { role: '副店长 (Assistant Manager)', code: 'FDZ' },
+    LSO400: { role: '店长 (Store Manager)', code: 'DZ' },
+  };
+  const wrap = document.getElementById('level-cards');
+  const html = ['LSO100','LSO200','LSO300','LSO400'].map(lvl => {
+    const s = DATA.per_level[lvl];
+    const r = roles[lvl];
+    return `
+      <div class="level-card">
+        <div class="level-badge">${lvl} · ${r.code}</div>
+        <div class="level-role">${r.role}</div>
+        <div class="level-median-label">中位获证天数</div>
+        <div class="level-median">${s.median}<span class="level-median-unit">天</span></div>
+        <div class="level-stats">
+          <div class="level-stat-row"><span>总获证人数</span><span>${s.total}</span></div>
+          <div class="level-stat-row"><span>在职 / 离职</span><span>${s.active} / ${s.separated} (${s.attrition}%)</span></div>
+          <div class="level-stat-row"><span>P25 - P75</span><span>${s.p25} - ${s.p75} 天</span></div>
+          <div class="level-stat-row"><span>P95 / 最大</span><span>${s.p95} / ${s.max} 天</span></div>
+          <div class="level-stat-row"><span>均值</span><span>${s.mean} 天</span></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderHistograms() {
+  const wrap = document.getElementById('histograms');
+  const binLabels = ['< -100', '-100 ~ -30', '-30 ~ 0', '0 ~ 30', '30 ~ 60', '60 ~ 90', '90 ~ 120', '120 ~ 150', '150 ~ 180', '180 ~ 210', '210 ~ 240', '240 ~ 280'];
+  const maxCount = Math.max(...Object.values(DATA.histograms).flatMap(h => h.counts));
+
+  const html = ['LSO100','LSO200','LSO300','LSO400'].map(lvl => {
+    const h = DATA.histograms[lvl];
+    const rows = h.counts.map((c, i) => {
+      const w = c === 0 ? 0 : Math.max(1.5, (c / maxCount) * 100);
+      const negative = h.bins[i] < 0;
+      const color = negative ? 'var(--danger)' : (h.bins[i] >= 150 ? 'var(--warning)' : 'var(--blue)');
+      return `
+        <div class="histo-row">
+          <span class="histo-label">${binLabels[i]} 天</span>
+          <div class="histo-bar-bg">
+            <div class="histo-bar" style="width: ${w}%; background: ${color};"></div>
+          </div>
+          <span class="histo-count">${c || '·'}</span>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="histo-block">
+        <div class="histo-head">
+          <span class="histo-lvl">${lvl}</span>
+          <span class="histo-stat">n = ${DATA.per_level[lvl].total} · 中位 ${DATA.per_level[lvl].median} 天 · 均值 ${DATA.per_level[lvl].mean}</span>
+        </div>
+        ${rows}
+      </div>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderPipelineTracks() {
+  const wrap = document.getElementById('pipeline-tracks');
+  const fp = DATA.full_pipeline;
+  const maxDay = Math.max(...fp.map(r => r.LSO400 || 0)) * 1.05;
+
+  // Ruler at top
+  const ruler = `
+    <div class="pipe-rule-row" style="border-bottom: 1px solid var(--border);">
+      <div></div>
+      <svg viewBox="0 0 1000 22" style="width: 100%; height: 22px;" preserveAspectRatio="none">
+        ${[0, 50, 100, 150, 200, 250, 300].map(d => {
+          const x = (d / maxDay) * 1000;
+          if (x > 1000) return '';
+          return `<line x1="${x}" y1="0" x2="${x}" y2="6" stroke="#9CA3AF" stroke-width="1"/>
+                  <text x="${x}" y="20" font-family="IBM Plex Mono" font-size="10" fill="#6B7280" text-anchor="${x < 50 ? 'start' : x > 950 ? 'end' : 'middle'}">${d}d</text>`;
+        }).join('')}
+      </svg>
+      <div></div>
+    </div>
+  `;
+
+  const html = fp.map(r => {
+    const pos = lvl => Math.max(0, ((r[lvl] || 0) / maxDay) * 100);
+    const isSep = r.employee_status === 'Separated';
+    const colors = ['#93C5FD', '#60A5FA', '#2563EB', '#003F87'];
+
+    const svg = `
+      <svg viewBox="0 0 1000 32" style="width:100%; height: 32px;" preserveAspectRatio="none">
+        <rect x="0" y="14" width="1000" height="2" fill="#E5E7EB"/>
+        <rect x="0" y="13" width="${pos('LSO100') * 10}" height="4" fill="${colors[0]}"/>
+        <rect x="${pos('LSO100') * 10}" y="13" width="${(pos('LSO200') - pos('LSO100')) * 10}" height="4" fill="${colors[1]}"/>
+        <rect x="${pos('LSO200') * 10}" y="13" width="${(pos('LSO300') - pos('LSO200')) * 10}" height="4" fill="${colors[2]}"/>
+        <rect x="${pos('LSO300') * 10}" y="13" width="${(pos('LSO400') - pos('LSO300')) * 10}" height="4" fill="${colors[3]}"/>
+        ${['LSO100','LSO200','LSO300','LSO400'].map((lvl, i) => {
+          const x = pos(lvl) * 10;
+          return `<circle cx="${x}" cy="15" r="4.5" fill="${colors[i]}" stroke="white" stroke-width="1.5"/>
+                  <text x="${x}" y="9" font-family="IBM Plex Mono" font-size="9" fill="#111827" text-anchor="middle" font-weight="600">${r[lvl]}</text>`;
+        }).join('')}
+      </svg>
+    `;
+    return `
+      <div class="pipe-track">
+        <div>
+          <div class="pipe-emp-name">${escapeHtml(r.full_name)}</div>
+          <div class="pipe-emp-meta">${escapeHtml(r.dept_name || '')} · ${isSep ? '<span class="tag tag-sep">离职</span>' : '<span class="tag tag-active">在职</span>'}</div>
+        </div>
+        <div>${svg}</div>
+        <div class="pipe-total">${r.LSO400}<div class="pipe-total-unit">天</div></div>
+      </div>
+    `;
+  }).join('');
+  wrap.innerHTML = ruler + html;
+}
+
+function renderAttritionBars() {
+  const wrap = document.getElementById('attrition-bars');
+  const maxAttr = 30;
+  const html = ['LSO100','LSO200','LSO300','LSO400'].map(lvl => {
+    const s = DATA.per_level[lvl];
+    const w = (s.attrition / maxAttr) * 100;
+    const color = s.attrition > 20 ? 'var(--danger)' : s.attrition > 15 ? 'var(--warning)' : 'var(--success)';
+    return `
+      <div style="margin-bottom: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+          <span style="font-family: var(--mono); font-weight: 600; font-size: 13px; color: var(--blue-deep);">${lvl}</span>
+          <span style="font-size: 22px; font-weight: 700; color: ${color}; letter-spacing: -0.02em;">${s.attrition}%</span>
+        </div>
+        <div style="height: 12px; background: var(--border-soft); position: relative;">
+          <div style="height: 100%; width: ${w}%; background: ${color}; transition: width 0.6s;"></div>
+        </div>
+        <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 4px;">
+          ${s.separated} 已离职 / ${s.total} 总人数
+        </div>
+      </div>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderPatternBars() {
+  const wrap = document.getElementById('pattern-bars');
+  const patterns = DATA.patterns;
+  const total = Object.values(patterns).reduce((a,b) => a+b, 0);
+  const entries = [
+    ['1000', '咖啡师阶段，未进入主管通道'],
+    ['1100', '已晋升或正在晋升值班主管'],
+    ['1110', '副店长梯队'],
+    ['1111', '全通道，完成 LSO100→LSO400'],
+    ['0111', 'LSO100 在窗口期前获得'],
+    ['0100', '仅 LSO200，需复核'],
+    ['1101', '跳级，未取 LSO300'],
+  ];
+  const maxCount = Math.max(...Object.values(patterns));
+
+  const html = entries.filter(([p]) => patterns[p]).map(([p, desc]) => {
+    const c = patterns[p];
+    const w = (c / maxCount) * 100;
+    const isFP = p === '1111';
+    return `
+      <div style="margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+          <span style="font-family: var(--mono); font-weight: 700; font-size: 13px; color: ${isFP ? 'var(--blue-deep)' : 'var(--ink)'};">${p}</span>
+          <span style="font-size: 18px; font-weight: 700; color: ${isFP ? 'var(--blue-deep)' : 'var(--ink)'}; letter-spacing: -0.01em;">${c}<span style="font-size: 11px; color: var(--grey); font-weight: 400; margin-left: 6px;">人 · ${(c/total*100).toFixed(1)}%</span></span>
+        </div>
+        <div style="height: 12px; background: var(--border-soft); position: relative;">
+          <div style="height: 100%; width: ${w}%; background: ${isFP ? 'var(--blue-deep)' : 'var(--blue)'}; transition: width 0.6s;"></div>
+        </div>
+        <div style="font-size: 12px; color: var(--ink-soft); margin-top: 3px;">${desc}</div>
+      </div>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderDeptTable() {
+  const wrap = document.getElementById('dept-tbody');
+  const max = Math.max(...DATA.dept_dist.map(r => r.total));
+  const html = DATA.dept_dist.slice(0, 15).map((r, i) => {
+    const w = (r.total / max) * 100;
+    return `
+      <tr>
+        <td class="num" style="color: var(--grey);">${i+1}</td>
+        <td>${escapeHtml(r.dept_name)}</td>
+        <td class="num">${r.LSO100 || 0}</td>
+        <td class="num">${r.LSO200 || 0}</td>
+        <td class="num">${r.LSO300 || 0}</td>
+        <td class="num">${r.LSO400 || 0}</td>
+        <td class="num" style="position: relative;">
+          <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+            <div style="height: 6px; width: ${w}%; max-width: 70px; background: var(--blue); opacity: 0.6;"></div>
+            <strong style="color: var(--blue-deep); font-weight: 700;">${r.total}</strong>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderPosTable() {
+  const wrap = document.getElementById('pos-tbody');
+  const html = DATA.pos_dist.map(r => `
+    <tr>
+      <td>${escapeHtml(r.current_position_name || '—')}</td>
+      <td class="num">${r.LSO100 || 0}</td>
+      <td class="num">${r.LSO200 || 0}</td>
+      <td class="num">${r.LSO300 || 0}</td>
+      <td class="num">${r.LSO400 || 0}</td>
+      <td class="num" style="color: var(--blue-deep); font-weight: 700;">${r.total}</td>
+    </tr>
+  `).join('');
+  wrap.innerHTML = html;
+}
+
+function renderSlowest() {
+  const wrap = document.getElementById('slowest-block');
+  const html = ['LSO100','LSO200','LSO300','LSO400'].map(lvl => {
+    const rows = DATA.slowest[lvl].map(r => `
+      <tr>
+        <td style="font-weight: 600; font-size: 13px;">${escapeHtml(r.full_name)}</td>
+        <td class="mono" style="font-size: 11px; color: var(--grey);">${escapeHtml(r.dept_name || '')}</td>
+        <td class="num" style="font-weight: 700; color: ${r.days_to_cert > 180 ? 'var(--danger)' : r.days_to_cert > 120 ? 'var(--warning)' : 'var(--ink)'};">${r.days_to_cert}</td>
+        <td class="center">${r.employee_status === 'Active' ? '<span class="tag tag-active">在职</span>' : '<span class="tag tag-sep">离职</span>'}</td>
+      </tr>
+    `).join('');
+    return `
+      <div style="margin-bottom: 20px;">
+        <div style="font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--blue-deep); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border);">${lvl}</div>
+        <table>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderDataTable(filter = {}) {
+  const wrap = document.getElementById('data-tbody');
+  let rows = DATA.records.slice();
+  if (filter.search) {
+    const q = filter.search.toLowerCase();
+    rows = rows.filter(r =>
+      (r.full_name || '').toLowerCase().includes(q) ||
+      (r.employee_no || '').toLowerCase().includes(q) ||
+      (r.dept_name || '').toLowerCase().includes(q) ||
+      (r.email || '').toLowerCase().includes(q) ||
+      (r.current_position_name || '').toLowerCase().includes(q)
+    );
+  }
+  if (filter.level && filter.level !== 'ALL') rows = rows.filter(r => r.cert_level === filter.level);
+  if (filter.status) rows = rows.filter(r => r.employee_status === filter.status);
+  if (filter.anom === 'Y') rows = rows.filter(r => r.data_anomaly === 'Y');
+
+  document.getElementById('filter-count').textContent = `显示 ${rows.length} / ${DATA.records.length} 行`;
+
+  const display = rows.slice(0, 500);
+  const html = display.map(r => {
+    const daysColor = r.days_to_cert < 0 ? 'var(--danger)' :
+                       r.days_to_cert > 180 ? 'var(--danger)' :
+                       r.days_to_cert > 120 ? 'var(--warning)' :
+                       r.days_to_cert > 60 ? 'var(--ink)' : 'var(--success)';
+    const status = r.employee_status === 'Active' ? '<span class="tag tag-active">在职</span>' :
+                    r.employee_status === 'Separated' ? '<span class="tag tag-sep">离职</span>' : '';
+    const anom = r.data_anomaly === 'Y' ? ' <span class="tag tag-anom">异常</span>' : '';
+    return `
+      <tr>
+        <td class="mono">${escapeHtml(r.employee_no)}</td>
+        <td style="font-weight: 500;">${escapeHtml(r.full_name)}${anom}</td>
+        <td class="mono" style="font-size: 11px; color: var(--grey);">${escapeHtml(r.email || '')}</td>
+        <td class="mono">${escapeHtml(r.hire_date || '')}</td>
+        <td class="mono">${escapeHtml(r.lso_acquired_date || '')}</td>
+        <td class="num" style="font-weight: 700; color: ${daysColor};">${r.days_to_cert}</td>
+        <td class="mono" style="font-weight: 600; color: var(--blue-deep);">${r.cert_level}</td>
+        <td>${escapeHtml(r.dept_name || '')}</td>
+        <td>${escapeHtml(r.current_position_name || '')}</td>
+        <td>${status}</td>
+      </tr>
+    `;
+  }).join('');
+  wrap.innerHTML = html + (rows.length > 500 ? `<tr><td colspan="10" style="text-align: center; padding: 20px; color: var(--grey); font-style: italic;">仅显示前 500 行 (共 ${rows.length} 行匹配)。请使用搜索或筛选缩小范围。</td></tr>` : '');
+}
+
+function attachFilters() {
+  const search = document.getElementById('search');
+  const chips = document.querySelectorAll('.filter-chip');
+  let current = { search: '', level: 'ALL', status: null, anom: null };
+
+  search.addEventListener('input', () => {
+    current.search = search.value;
+    renderDataTable(current);
+  });
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (chip.dataset.level) {
+        document.querySelectorAll('[data-level]').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        current.level = chip.dataset.level;
+      } else if (chip.dataset.status) {
+        document.querySelectorAll('[data-status]').forEach(c => {
+          if (c !== chip) c.classList.remove('active');
+        });
+        chip.classList.toggle('active');
+        current.status = chip.classList.contains('active') ? chip.dataset.status : null;
+      } else if (chip.dataset.anom) {
+        chip.classList.toggle('active');
+        current.anom = chip.classList.contains('active') ? 'Y' : null;
+      }
+      renderDataTable(current);
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>
