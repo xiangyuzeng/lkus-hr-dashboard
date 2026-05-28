@@ -526,6 +526,7 @@
     <div class="topnav-links">
       <a href="#req-1">需求一 · SM</a>
       <a href="#req-2">需求二 · LSO</a>
+      <a href="#closed-loop">数据闭环</a>
       <a href="#req-2-funnel">培训漏斗</a>
       <a href="#req-2-pipeline">全通道队列</a>
       <a href="#req-2-table">全量数据</a>
@@ -557,7 +558,7 @@
       <div class="request-card">
         <div class="request-card-head">
           <span class="request-card-no">需求一</span>
-          <span class="request-card-status tag-status-pending" style="margin-left: auto;">数据待提取</span>
+          <span class="request-card-status tag-status-done" style="margin-left: auto;">已完成</span>
         </div>
         <div class="request-card-title">从其他职位变更为 SM 的人员清单</div>
         <p class="request-card-desc">
@@ -567,7 +568,7 @@
           <div><dt>时间窗口</dt><dd>2026-01-01 → 2026-05-27</dd></div>
           <div><dt>数据路径</dt><dd>iadmin · 人事系统 · 员工管理</dd></div>
         </div>
-        <a href="#req-1" class="request-card-jump pending">查看分析方案 →</a>
+        <a href="#req-1" class="request-card-jump">查看完整分析 →</a>
       </div>
 
       <!-- Request 2 card -->
@@ -597,95 +598,199 @@
     <div class="section-head">
       <span class="section-num">一</span>
       <h2 class="section-title">SM 职位变更人员分析</h2>
-      <span class="section-tag tag-status-pending">数据待提取</span>
+      <span class="section-tag tag-status-done">已完成</span>
     </div>
     <p class="section-lead">
-      本需求要求统计 2026-01-01 至 2026-05-27 期间，iadmin 人事系统内所有从其他职位变更为 SM (店长 / Store Manager) 的小伙伴。分析方案已完成，等待运行数据提取脚本后回填结果。
+      2026-01-01 至 2026-05-27 期间共 <strong>8 位小伙伴</strong>从 Store Manager Trainee (SMT) 晋升为 SM (店长 / Store Manager)。本节给出完整人员名单、月度分布、入职至升任周期，以及与需求二 LSO 资质获取数据的交叉分析。
     </p>
 
-    <!-- Data scope info -->
+    <!-- Data scope -->
     <div class="info-grid">
       <div class="info-card">
         <div class="info-card-label">时间窗口</div>
-        <div class="info-card-value">2026-01-01 至 2026-05-27 (PT 业务口径)</div>
+        <div class="info-card-value">2026-01-01 至 2026-05-27</div>
       </div>
       <div class="info-card">
         <div class="info-card-label">数据源表</div>
-        <div class="info-card-value">t_ehr_employee_post_relation (主岗历史)</div>
+        <div class="info-card-value">t_ehr_employee_adjustment_snapshot</div>
       </div>
       <div class="info-card">
-        <div class="info-card-label">目标职位</div>
-        <div class="info-card-value">SM · 店长 (post_code = LKUS00000082)</div>
+        <div class="info-card-label">提取路径</div>
+        <div class="info-card-value">Path B · 异动快照表 (2,324 行 LKUS 数据)</div>
       </div>
     </div>
 
-    <!-- Pending block with extraction methodology -->
-    <div class="pending-block">
-      <div class="pending-head">
-        <div class="pending-icon">⟳</div>
-        <div>
-          <div class="pending-title">数据提取方案 · 待运行</div>
-          <div style="font-size: 13px; color: var(--grey); margin-top: 4px;">完整 Claude Code prompt 已就绪，详见配套交付件 iadmin_sm_promotion_query_prompt.md</div>
-        </div>
-      </div>
-      <p class="pending-text">
-        分析逻辑：在 iehr <code style="background: white; padding: 2px 6px; font-family: var(--mono); font-size: 12px;">t_ehr_employee_post_relation</code> 表中查找时间窗口内 <strong>new_post_code = SM 且 old_post_code ≠ SM</strong> 的变更记录，关联 <code style="background: white; padding: 2px 6px; font-family: var(--mono); font-size: 12px;">t_ehr_employee</code> 主表得到姓名、邮箱、所属门店、原始职位。对同一人在窗口内多次反复变更 (如 ASM → SM → ASM → SM) 取首次晋升记录但保留全部历史。
-      </p>
-      <div class="pending-code"><span class="comment"># 运行方式 (在 Claude Code 终端，MCP DB Gateway 已连接)</span>
-claude <span class="flag">--dangerously-skip-permissions</span> -p "$(cat iadmin_sm_promotion_query_prompt.md)"
-
-<span class="comment"># 产出两个文件:</span>
-<span class="comment">#   iadmin_sm_promotions_2026H1.csv      — 完整明细 CSV</span>
-<span class="comment">#   iadmin_sm_promotions_2026H1_summary.md — 中文小结 (含人数 + 名单)</span></div>
-    </div>
-
-    <!-- KPI placeholder -->
-    <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); margin: 32px 0 16px;">数据回填后将呈现</h3>
-    <div class="kpi-row" style="opacity: 0.7;">
+    <!-- KPIs -->
+    <div class="kpi-row">
       <div class="kpi-cell">
         <div class="kpi-label">变更为 SM 人数</div>
-        <div class="kpi-num pending">— <span class="kpi-unit">人</span></div>
-        <div class="kpi-note">独立计数 (去重)</div>
+        <div class="kpi-num">8<span class="kpi-unit">人</span></div>
+        <div class="kpi-note">独立计数 · 无反复变更</div>
       </div>
       <div class="kpi-cell">
         <div class="kpi-label">变更记录数</div>
-        <div class="kpi-num pending">— <span class="kpi-unit">条</span></div>
-        <div class="kpi-note">含反复变更</div>
+        <div class="kpi-num">8<span class="kpi-unit">条</span></div>
+        <div class="kpi-note">每位小伙伴一次成功晋升</div>
       </div>
       <div class="kpi-cell">
         <div class="kpi-label">涉及门店数</div>
-        <div class="kpi-num pending">— <span class="kpi-unit">家</span></div>
-        <div class="kpi-note">按所属门店统计</div>
+        <div class="kpi-num">7<span class="kpi-unit">家</span></div>
+        <div class="kpi-note">102 Fulton 出现 2 次</div>
       </div>
       <div class="kpi-cell">
-        <div class="kpi-label">主要来源职位</div>
-        <div class="kpi-num pending" style="font-size: 28px;">—</div>
-        <div class="kpi-note">变更前职位分布</div>
+        <div class="kpi-label">来源职位均一性</div>
+        <div class="kpi-num">100<span class="kpi-unit">%</span></div>
+        <div class="kpi-note">全部来自 SMT (Store Manager Trainee)</div>
       </div>
     </div>
 
-    <!-- Sample table layout -->
-    <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); margin: 32px 0 16px;">人员名单表格结构</h3>
-    <table>
+    <!-- People list -->
+    <h3 style="font-size: 20px; font-weight: 700; color: var(--ink); margin: 40px 0 16px;">人员清单 (按生效日期升序)</h3>
+    <table id="sm-table">
       <thead>
         <tr>
-          <th style="width: 40px;">序号</th>
+          <th style="width: 40px;">#</th>
           <th>员工编号</th>
           <th>姓名</th>
-          <th>邮箱</th>
+          <th>入职日期</th>
           <th>变更前职位</th>
           <th>变更后职位</th>
           <th>生效日期</th>
           <th>所属门店</th>
+          <th class="num">入职至升任</th>
+          <th class="num">LSO400→SM</th>
+          <th>状态</th>
         </tr>
       </thead>
-      <tbody>
-        <tr><td colspan="8" style="text-align: center; padding: 32px; color: var(--grey); font-style: italic;">数据提取后填充，表格结构与 LCNA-HR-LSO-2026-002 工作簿一致</td></tr>
-      </tbody>
+      <tbody id="sm-tbody"></tbody>
     </table>
+    <p style="margin-top: 12px; font-size: 12px; color: var(--grey);">
+      "入职至升任" = 入职日至 SM 生效日的自然日天数。"LSO400→SM" = 取得店长资质 (LSO400) 至晋升 SM 生效日的自然日天数；负值表示晋升日早于资质登记日 (云学堂 LMS 异步同步导致)。
+    </p>
 
-    <p style="margin-top: 16px; font-size: 13px; color: var(--grey);">
-      数据回填工作流：运行提取脚本 → 拿到 CSV → 重新生成 data.json → 重建 index.html → 重新部署 Vercel。完整步骤见配套 README.md。
+    <!-- Two-col: monthly + days -->
+    <div class="two-col" style="margin-top: 40px;">
+      <div>
+        <h3>月度晋升分布</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 20px;">5 个月内 8 次晋升，分布相对均匀。</p>
+        <div id="sm-monthly"></div>
+      </div>
+      <div>
+        <h3>入职至升任 SM 周期</h3>
+        <p style="font-size: 13px; color: var(--ink-soft); margin-bottom: 20px;">从首次入职到升任 SM 的自然日。8 人样本，全部经过 SMT 培训阶段。</p>
+        <div style="background: var(--blue-softer); padding: 24px; border: 1px solid var(--border);">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+              <div style="font-size: 11px; color: var(--grey); margin-bottom: 4px; font-weight: 500;">中位数</div>
+              <div style="font-size: 32px; font-weight: 700; color: var(--blue-deep); letter-spacing: -0.02em;">210<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天</span></div>
+              <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 2px;">约 7 个月</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--grey); margin-bottom: 4px; font-weight: 500;">均值</div>
+              <div style="font-size: 32px; font-weight: 700; color: var(--blue-deep); letter-spacing: -0.02em;">215<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天</span></div>
+              <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 2px;">~ 7.1 个月</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--grey); margin-bottom: 4px; font-weight: 500;">最快</div>
+              <div style="font-size: 32px; font-weight: 700; color: var(--success); letter-spacing: -0.02em;">147<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天</span></div>
+              <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 2px;">Kayen Wu He</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--grey); margin-bottom: 4px; font-weight: 500;">最长</div>
+              <div style="font-size: 32px; font-weight: 700; color: var(--warning); letter-spacing: -0.02em;">302<span style="font-size: 14px; color: var(--grey); font-weight: 400; margin-left: 4px;">天</span></div>
+              <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 2px;">Huichen Jiang</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Source post distribution -->
+    <h3 style="font-size: 20px; font-weight: 700; color: var(--ink); margin: 40px 0 16px;">变更前职位分布</h3>
+    <p style="font-size: 14px; color: var(--ink-soft); margin-bottom: 16px; line-height: 1.65;">
+      8 位升任 SM 的小伙伴全部来自 Store Manager Trainee (SMT, LKUS00000098)。没有任何 ASM → SM 越级、Barista → SM 直升、或其他横向调动入 SM 的情况。<strong>说明北美店长培养路径单一稳定，培训序列严格执行。</strong>
+    </p>
+    <div style="background: var(--blue-deep); padding: 24px 28px; color: white;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <span style="font-family: var(--mono); font-size: 14px; font-weight: 600;">Store Manager Trainee (SMT)</span>
+        <span style="font-size: 28px; font-weight: 700; letter-spacing: -0.02em;">8 <span style="font-size: 14px; opacity: 0.8; font-weight: 400;">人 · 100.0%</span></span>
+      </div>
+      <div style="height: 8px; background: rgba(255,255,255,0.15); position: relative;">
+        <div style="height: 100%; width: 100%; background: #60A5FA;"></div>
+      </div>
+      <div style="font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 8px;">post_code = LKUS00000098 · 训练生岗位</div>
+    </div>
+  </div>
+</section>
+
+<!-- === Closed-loop section: SM × LSO data 闭环 === -->
+<section id="closed-loop" style="background: var(--blue-softer); border-top: 2px solid var(--blue); border-bottom: 2px solid var(--blue);">
+  <div class="container">
+    <div class="section-head">
+      <span class="section-num" style="background: var(--blue-deep);">★</span>
+      <h2 class="section-title">数据闭环 · LSO 资质 × SM 晋升</h2>
+    </div>
+    <p class="section-lead">
+      将需求一 (SM 变更) 与需求二 (LSO 资质获取) 数据交叉对比，回答关键业务问题：<strong>"取得 LSO400 店长资质后，多久能升任 SM？"</strong>
+    </p>
+
+    <div class="kpi-row" style="background: white;">
+      <div class="kpi-cell">
+        <div class="kpi-label">LSO400 → SM 中位天数</div>
+        <div class="kpi-num" style="color: var(--blue);">6<span class="kpi-unit">天</span></div>
+        <div class="kpi-note">取得店长资质至升任的等待期</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">LSO400 → SM 均值</div>
+        <div class="kpi-num" style="color: var(--blue);">11.9<span class="kpi-unit">天</span></div>
+        <div class="kpi-note">含 1 位等待 63 天的离群点 (Wenny Lin)</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">资质 - 晋升耦合度</div>
+        <div class="kpi-num" style="color: var(--success);">8/8</div>
+        <div class="kpi-note">全部 8 位晋升者均已取得 LSO400</div>
+      </div>
+      <div class="kpi-cell">
+        <div class="kpi-label">全通道队列产能</div>
+        <div class="kpi-num" style="color: var(--blue-deep);">47<span class="kpi-unit">%</span></div>
+        <div class="kpi-note">8 人占现役 17 名 SM 的 47%</div>
+      </div>
+    </div>
+
+    <!-- Story -->
+    <div style="margin-top: 32px; padding: 28px 32px; background: white; border-left: 4px solid var(--blue);">
+      <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); margin-bottom: 12px;">关键发现</h3>
+      <p style="font-size: 15px; color: var(--ink-soft); line-height: 1.75; margin-bottom: 12px;">
+        本次 8 位升任 SM 的小伙伴<strong>全部</strong>是需求二中 LSO 全通道 (1111) 队列的成员。这意味着：<strong>LSO 培训体系是 SM 晋升的事实性必要条件。</strong>云学堂 LMS 数据 (LSO400) 与 iehr 异动数据 (SM 晋升) 高度一致，培养通道闭环良好。
+      </p>
+      <p style="font-size: 15px; color: var(--ink-soft); line-height: 1.75;">
+        LSO400 取得至 SM 升任的中位间隔仅 <strong style="color: var(--blue-deep);">6 天</strong>，说明北美 HR 在小伙伴获得店长资质后能<strong>快速完成审批与上岗</strong>。8 人中 5 人间隔 ≤ 8 天，3 人间隔在 22-63 天。
+      </p>
+    </div>
+
+    <!-- The 18 cohort breakdown -->
+    <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); margin: 36px 0 16px;">LSO 全通道 18 人队列流向追踪</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+      <div style="background: white; border: 1px solid var(--border); padding: 24px;">
+        <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;">
+          <span style="font-size: 36px; font-weight: 700; color: var(--blue-deep); letter-spacing: -0.02em;">8</span>
+          <span style="font-size: 14px; color: var(--ink-soft); font-weight: 500;">人 · 本窗口期内 (2026-01-01 至 2026-05-27) 完成 SM 晋升</span>
+        </div>
+        <div style="font-size: 13px; color: var(--grey); margin-bottom: 16px;">这就是需求一返回的 8 人。</div>
+        <div id="cohort-promoted"></div>
+      </div>
+      <div style="background: white; border: 1px solid var(--border); padding: 24px;">
+        <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px;">
+          <span style="font-size: 36px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em;">10</span>
+          <span style="font-size: 14px; color: var(--ink-soft); font-weight: 500;">人 · 窗口期前已晋升 / 其他流向</span>
+        </div>
+        <div style="font-size: 13px; color: var(--grey); margin-bottom: 16px;">9 位当前为 Store Manager (窗口期前晋升)，1 位转为 OPS Support。</div>
+        <div id="cohort-other"></div>
+      </div>
+    </div>
+
+    <p style="margin-top: 24px; font-size: 13px; color: var(--ink-soft); font-style: italic; line-height: 1.7;">
+      合计：18 位全通道学员中，17 位现为 Store Manager (与异动快照表中现役 SM 总数 17 人完全一致)，1 位转为 OPS Support。培养通道转化率近 100%。
     </p>
   </div>
 </section>
@@ -735,6 +840,7 @@ claude <span class="flag">--dangerously-skip-permissions</span> -p "$(cat iadmin
       <li><strong>培训投入与人员留存正相关。</strong>各级流失率：LSO100 25.1% → LSO200 17.1% → LSO300 12.5% → LSO400 16.7%。LSO400 端微幅回升 (+4.2pp)，反映资深店长岗位独立性较高、跳槽机会更多。</li>
       <li><strong>个人级别 vs 全局中位数存在统计悖论。</strong>全局看 LSO300 → LSO400 中位差仅 11 天，看似最易跨越；但锁定 18 人全通道队列后按个人复盘，中位差实为 51 天、最长 180 天，是培训通道中最长且差异最大的一段。该差异如不识别，业务侧极易得出错误结论。</li>
       <li><strong>数据异常 4 行涉及 2 位小伙伴。</strong>Daniel Chu (US202510060002) 员工编号与入职日期不一致，疑似再入职数据重建未刷工号；Jocelyn Lopez (US202510140002) 属合理的预入职培训场景，无需修正。详见第七节。</li>
+      <li><strong>资质 - 晋升数据闭环成立。</strong>窗口期内 8 位升任 SM 的小伙伴<strong>全部</strong>来自 LSO 全通道 (1111) 队列，且 LSO400 → SM 中位间隔仅 6 天。北美 HR 在小伙伴获得店长资质后能快速完成审批与上岗。需求一与需求二数据已交叉印证，详见数据闭环章节。</li>
     </ol>
   </div>
 </section>
@@ -1162,6 +1268,10 @@ function render() {
   renderSlowest();
   renderDataTable();
   attachFilters();
+  // SM + closed-loop renders
+  renderSMTable();
+  renderSMMonthly();
+  renderCohortLists();
 }
 
 function renderKPIs() {
@@ -1488,6 +1598,99 @@ function attachFilters() {
       renderDataTable(current);
     });
   });
+}
+
+function renderSMTable() {
+  const wrap = document.getElementById('sm-tbody');
+  if (!wrap || typeof SM_DATA === 'undefined') return;
+  const html = SM_DATA.records.map((r, i) => {
+    const gapColor = r.lso400_to_sm_gap === null ? 'var(--grey)' :
+                      r.lso400_to_sm_gap < 0 ? 'var(--warning)' :
+                      r.lso400_to_sm_gap < 14 ? 'var(--success)' :
+                      r.lso400_to_sm_gap < 30 ? 'var(--ink)' : 'var(--warning)';
+    const gapText = r.lso400_to_sm_gap === null ? '—' : r.lso400_to_sm_gap + ' 天';
+    const daysColor = r.days_to_sm < 180 ? 'var(--success)' :
+                       r.days_to_sm < 240 ? 'var(--blue-deep)' :
+                       r.days_to_sm < 300 ? 'var(--ink)' : 'var(--warning)';
+    return `
+      <tr>
+        <td class="num" style="color: var(--grey);">${i+1}</td>
+        <td class="mono">${escapeHtml(r.employee_no)}</td>
+        <td style="font-weight: 600;">${escapeHtml(r.full_name)}</td>
+        <td class="mono">${escapeHtml(r.hire_date)}</td>
+        <td><span style="font-family: var(--mono); font-size: 11px; padding: 2px 6px; background: var(--blue-softer); color: var(--blue-deep);">${escapeHtml(r.from_post_name)}</span></td>
+        <td><span style="font-family: var(--mono); font-size: 11px; padding: 2px 6px; background: var(--blue); color: white; font-weight: 600;">${escapeHtml(r.to_post_name)}</span></td>
+        <td class="mono" style="font-weight: 600; color: var(--blue-deep);">${escapeHtml(r.effective_date)}</td>
+        <td>${escapeHtml(r.dept_name)}</td>
+        <td class="num" style="font-weight: 700; color: ${daysColor};">${r.days_to_sm}</td>
+        <td class="num" style="font-weight: 700; color: ${gapColor};">${gapText}</td>
+        <td><span class="tag tag-active">在职</span></td>
+      </tr>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderSMMonthly() {
+  const wrap = document.getElementById('sm-monthly');
+  if (!wrap || typeof SM_DATA === 'undefined') return;
+  const months = SM_DATA.monthly;
+  const maxCount = Math.max(...Object.values(months));
+  const monthLabels = { '2026-01': '1 月', '2026-02': '2 月', '2026-03': '3 月', '2026-04': '4 月', '2026-05': '5 月' };
+  const html = Object.entries(months).map(([m, c]) => {
+    const w = (c / maxCount) * 100;
+    return `
+      <div style="display: flex; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--border-soft);">
+        <span style="font-family: var(--mono); font-size: 12px; color: var(--grey); width: 70px; flex-shrink: 0;">${monthLabels[m] || m}</span>
+        <div style="flex: 1; height: 22px; background: var(--border-soft); position: relative;">
+          <div style="height: 100%; width: ${w}%; background: var(--blue);"></div>
+        </div>
+        <span style="font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--blue-deep); width: 48px; text-align: right;">${c} 人</span>
+      </div>
+    `;
+  }).join('');
+  wrap.innerHTML = html;
+}
+
+function renderCohortLists() {
+  if (typeof SM_DATA === 'undefined') return;
+  // Left: 8 promoted
+  const promotedWrap = document.getElementById('cohort-promoted');
+  if (promotedWrap) {
+    const html = SM_DATA.records.map(r => `
+      <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px;">
+        <div style="flex: 1;">
+          <div style="font-weight: 600; color: var(--ink);">${escapeHtml(r.full_name)}</div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 2px;">${escapeHtml(r.dept_name)} · LSO400 ${escapeHtml(r.lso400_date || '—')}</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-family: var(--mono); font-weight: 700; color: var(--blue-deep);">${escapeHtml(r.effective_date)}</div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--grey);">间隔 ${r.lso400_to_sm_gap === null ? '—' : r.lso400_to_sm_gap + ' 天'}</div>
+        </div>
+      </div>
+    `).join('');
+    promotedWrap.innerHTML = html;
+  }
+
+  // Right: 10 others
+  const otherWrap = document.getElementById('cohort-other');
+  if (otherWrap) {
+    const html = SM_DATA.closed_loop.fp_other.map(r => {
+      const isOps = r.current_position_name === 'OPS Support';
+      return `
+        <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px;">
+          <div style="flex: 1;">
+            <div style="font-weight: 600; color: var(--ink);">${escapeHtml(r.full_name)}</div>
+            <div style="font-family: var(--mono); font-size: 11px; color: var(--grey); margin-top: 2px;">${escapeHtml(r.dept_name)} · LSO400 ${escapeHtml(r.lso400_date || '—')}</div>
+          </div>
+          <div style="text-align: right;">
+            <span class="tag" style="background: ${isOps ? '#E0E7FF' : 'var(--success-bg)'}; color: ${isOps ? '#4338CA' : 'var(--success)'};">${escapeHtml(r.current_position_name)}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+    otherWrap.innerHTML = html;
+  }
 }
 
 function escapeHtml(s) {
